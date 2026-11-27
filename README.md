@@ -10,10 +10,6 @@ even pace and projects where you'll land at reset.
 - Reads the Claude CLI's existing OAuth login. **Only timestamps are exported; the token never leaves
   the file**, and it is never logged.
 
-> The repository is moving from `pipthefox/claude-usage-exporter` to `jfryman/claude-usage-exporter`.
-> Until it has, use `pipthefox` in the release and image URLs below (GitHub redirects the old
-> URLs afterwards).
-
 ## How it works
 
 The exporter reads `~/.claude/.credentials.json` (written by `claude` when you log in) and calls

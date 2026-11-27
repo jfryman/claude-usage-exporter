@@ -7,6 +7,12 @@ rename or removal is a breaking change.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-27
+
+### Changed
+- The repository moved to `jfryman/claude-usage-exporter`. The container image is now published at
+  `ghcr.io/jfryman/claude-usage-exporter` (the old `pipthefox` image stays available). No code changes.
+
 ## [0.1.0] - 2026-11-27
 
 First packaged release of the exporter that was previously shared as a single script.
@@ -33,5 +39,6 @@ First packaged release of the exporter that was previously shared as a single sc
 - `claude_usage_resets_at_seconds` and `claude_usage_extra_utilization` now have `# HELP` lines.
   Metric names, labels and values are unchanged from the script.
 
-[Unreleased]: https://github.com/jfryman/claude-usage-exporter/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/jfryman/claude-usage-exporter/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/jfryman/claude-usage-exporter/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/jfryman/claude-usage-exporter/releases/tag/v0.1.0
