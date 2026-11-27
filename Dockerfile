@@ -1,5 +1,5 @@
 # ghcr.io/jfryman/claude-usage-exporter: the exporter, stdlib only, as a non-root user.
-FROM python:3.13-slim
+FROM python:3.15-slim
 
 LABEL org.opencontainers.image.source="https://github.com/jfryman/claude-usage-exporter" \
       org.opencontainers.image.licenses="MIT"
