@@ -36,7 +36,7 @@ Use one or the other for a given user. Two exporters on one port fail to start.
 The package is a plain file with a checksum, so configuration management can pin both. Puppet:
 
 ```puppet
-$version = '0.1.0'
+$version = '0.1.1'
 $deb     = "/var/cache/claude-usage-exporter/claude-usage-exporter_${version}_all.deb"
 file { '/var/cache/claude-usage-exporter': ensure => directory }
 file { $deb:
@@ -63,17 +63,17 @@ build provenance for the `.deb`:
 ```sh
 sha256sum --ignore-missing -c SHA256SUMS
 gpg --verify SHA256SUMS.asc SHA256SUMS
-gh attestation verify claude-usage-exporter_0.1.0_all.deb --repo jfryman/claude-usage-exporter
+gh attestation verify claude-usage-exporter_0.1.1_all.deb --repo jfryman/claude-usage-exporter
 ```
 
 Import the release key from its GitHub account first (`curl -s https://github.com/pipthefox.gpg |
 gpg --import`) and check the fingerprint: `79C5 A318 06F1 AAE4 2107  BD44 187A 16A9 2C56 75DF`.
-The release tags are signed with the same key (`git tag -v v0.1.0`).
+The release tags are signed with the same key (`git tag -v v0.1.1`).
 
 ## From source
 
 ```sh
-pip install 'git+https://github.com/jfryman/claude-usage-exporter@v0.1.0'
+pip install 'git+https://github.com/jfryman/claude-usage-exporter@v0.1.1'
 ```
 
 ## Container and Kubernetes
@@ -85,7 +85,7 @@ provenance). It runs as uid 65532, listens on `0.0.0.0:9101` and reads
 ```sh
 docker run --rm -p 9101:9101 --user "$(id -u):$(id -g)" \
   -v "$HOME/.claude/.credentials.json:/credentials/.credentials.json:ro" \
-  ghcr.io/jfryman/claude-usage-exporter:0.1.0
+  ghcr.io/jfryman/claude-usage-exporter:0.1.1
 ```
 
 The catch: the exporter never refreshes the OAuth token, and the access token lasts about 8 hours.
@@ -100,7 +100,7 @@ A minimal Deployment:
 ```yaml
 containers:
   - name: claude-usage-exporter
-    image: ghcr.io/jfryman/claude-usage-exporter:0.1.0
+    image: ghcr.io/jfryman/claude-usage-exporter:0.1.1
     ports: [{name: metrics, containerPort: 9101}]
     readinessProbe: {httpGet: {path: /healthz, port: metrics}}
     securityContext:

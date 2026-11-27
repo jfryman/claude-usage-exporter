@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claude-usage-exporter"
-version = "0.1.0"
+version = "0.1.1"
 description = "Prometheus exporter for Claude plan usage limits, read with the Claude CLI's OAuth login"
 readme = "README.md"
 requires-python = ">=3.11"

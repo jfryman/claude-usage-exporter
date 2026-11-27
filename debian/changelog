@@ -1,3 +1,9 @@
+claude-usage-exporter (0.1.1) unstable; urgency=medium
+
+  * Repository moved to jfryman/claude-usage-exporter. See CHANGELOG.md.
+
+ -- Pip Fryman <phillip@frykinindustries.com>  Fri, 27 Nov 2026 21:10:00 +0000
+
 claude-usage-exporter (0.1.0) unstable; urgency=medium
 
   * First packaged release. See CHANGELOG.md.
