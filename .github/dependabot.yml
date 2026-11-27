@@ -17,7 +17,11 @@ updates:
       interval: "weekly"
 
   # pyproject.toml: there are no runtime dependencies; this covers the test/lint floors.
+  # The setuptools build floor stays at the oldest version that works (77, PEP 639 metadata): the
+  # Debian package builds with the distribution's setuptools.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "setuptools"
