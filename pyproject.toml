@@ -21,7 +21,7 @@ classifiers = [
 Homepage = "https://github.com/jfryman/claude-usage-exporter"
 
 [project.optional-dependencies]
-test = ["pytest>=8"]
+test = ["pytest>=9.2.0"]
 lint = ["ruff>=0.14"]
 
 [project.scripts]
