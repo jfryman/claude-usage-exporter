@@ -1,0 +1,86 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: test (python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: pip install --disable-pip-version-check -e '.[test]'
+      - name: Test
+        run: python -m pytest -q
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Install
+        run: pip install --disable-pip-version-check -e '.[lint]'
+      - name: ruff
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Versions agree
+        run: |
+          py=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')
+          mod=$(python -c 'import claude_usage_exporter as m; print(m.__version__)')
+          deb=$(head -1 debian/changelog | sed -E 's/.*\(([^)]+)\).*/\1/')
+          echo "pyproject $py, module $mod, debian $deb"
+          test "$py" = "$mod" && test "$py" = "$deb"
+      - name: Dashboard is valid JSON
+        run: python -m json.tool dashboards/claude-usage-dashboard.json >/dev/null
+      - name: systemd units
+        run: |
+          d=$(mktemp -d)
+          cp systemd/claude-usage-exporter.service "$d/"
+          cp systemd/claude-usage-exporter@.service "$d/claude-usage-exporter@runner.service"
+          # ExecStart doesn't exist on the runner; everything else must verify.
+          out=$(systemd-analyze verify --man=no "$d/claude-usage-exporter@runner.service" 2>&1 | grep -v '/usr/bin/claude-usage-exporter' | grep -F "$d" || true)
+          out="$out$(systemd-analyze --user verify --man=no "$d/claude-usage-exporter.service" 2>&1 | grep -v '/usr/bin/claude-usage-exporter' | grep -F "$d" || true)"
+          if [ -n "$out" ]; then echo "$out"; exit 1; fi
+
+  deb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and lintian (Debian trixie)
+        run: docker run --rm -v "$PWD":/src:ro -v "$PWD/dist":/out debian:trixie /src/scripts/build-deb.sh
+      - name: Install and scrape in clean containers
+        run: |
+          for img in debian:bookworm ubuntu:24.04 ubuntu:26.04; do
+            docker run --rm -v "$PWD":/src:ro "$img" /src/scripts/smoke-test.sh /src/dist/$(cd dist && ls *.deb)
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: deb
+          path: dist/*.deb
+          retention-days: 7

@@ -1,0 +1,52 @@
+# Example Prometheus alert rules for claude-usage-exporter. Adjust thresholds and the job name.
+groups:
+  - name: claude-usage
+    rules:
+      - alert: ClaudeWeeklyUsageHigh
+        expr: max(claude_usage_percent{window="seven_day"}) >= 80
+        for: 15m
+        labels: {severity: warning}
+        annotations:
+          summary: Claude weekly usage is {{ $value | humanize }}%
+
+      - alert: ClaudeWeeklyUsageCritical
+        expr: max(claude_usage_percent{window="seven_day"}) >= 95
+        for: 15m
+        labels: {severity: critical}
+        annotations:
+          summary: Claude weekly usage is {{ $value | humanize }}%; the limit is close
+
+      - alert: ClaudeSessionUsageHigh
+        expr: max(claude_usage_percent{window="five_hour"}) >= 90
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: The 5-hour Claude window is {{ $value | humanize }}% used
+
+      - alert: ClaudeUsageExporterDown
+        expr: up{job="claude-usage"} == 0 or max(claude_usage_up) == 0
+        for: 30m
+        labels: {severity: warning}
+        annotations:
+          summary: The Claude usage exporter is down or can't read usage
+          description: >-
+            If claude_cli_credentials_readable is 1 and the access token is fresh, the usage
+            endpoint may have changed; check the exporter's log for "unexpected usage response shape".
+
+      # The refresh token is the real login lifetime; the access token is refreshed by the CLI.
+      - alert: ClaudeCliLoginExpiringSoon
+        expr: min(claude_cli_oauth_refresh_expires_at_seconds) - time() < 3 * 86400
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: The Claude CLI login expires in {{ $value | humanizeDuration }}; run claude and /login
+
+      - alert: ClaudeCliLoginExpired
+        expr: |-
+          min(claude_cli_oauth_refresh_expires_at_seconds) - time() <= 0
+          or min(claude_cli_credentials_readable) == 0
+          or (time() - min(claude_cli_oauth_access_expires_at_seconds) > 7200 and on () max(claude_usage_up) == 0)
+        for: 10m
+        labels: {severity: critical}
+        annotations:
+          summary: The Claude CLI login has expired or can't be read

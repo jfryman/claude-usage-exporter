@@ -1,0 +1,91 @@
+# On a vX.Y.Z tag: build the .deb, lintian, install-test it, attest provenance, and open a DRAFT
+# release with the assets. A maintainer then signs SHA256SUMS and publishes (docs/releasing.md).
+name: release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build and lintian (Debian trixie)
+        run: |
+          docker run --rm -e EXPECT_VERSION="${GITHUB_REF_NAME#v}" \
+            -v "$PWD":/src:ro -v "$PWD/dist":/out debian:trixie /src/scripts/build-deb.sh
+
+      - name: Install and scrape in clean containers
+        run: |
+          for img in debian:bookworm ubuntu:24.04 ubuntu:26.04; do
+            docker run --rm -v "$PWD":/src:ro "$img" /src/scripts/smoke-test.sh /src/dist/$(cd dist && ls *.deb)
+          done
+
+      - name: Assets
+        run: |
+          v=${GITHUB_REF_NAME#v}
+          mkdir release
+          cp dist/claude-usage-exporter_${v}_all.deb release/
+          cp dashboards/claude-usage-dashboard.json release/
+          tar --sort=name --owner=0 --group=0 --numeric-owner --mtime="@$(git log -1 --format=%ct)" \
+            --transform "s,^,claude-usage-exporter-docs-${v}/," \
+            -czf release/claude-usage-exporter-docs-${v}.tar.gz \
+            README.md CHANGELOG.md LICENSE SECURITY.md docs examples
+          (cd release && sha256sum * > SHA256SUMS && cat SHA256SUMS)
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            release/*.deb
+            release/*.json
+            release/*.tar.gz
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release
+          path: release/
+
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: release
+      - name: Draft release from the CHANGELOG section
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=${GITHUB_REF_NAME#v}
+          awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {on=1; next} on && /^## \[/ {exit} on' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "::error::no CHANGELOG section for $v"; exit 1; }
+          cat >> notes.md <<NOTES
+
+          ### Assets
+          - \`claude-usage-exporter_${v}_all.deb\`: Debian 12+ / Ubuntu 24.04+ package
+          - \`claude-usage-dashboard.json\`: Grafana dashboard
+          - \`claude-usage-exporter-docs-${v}.tar.gz\`: README, docs, example alert rules
+          - \`SHA256SUMS\`, \`SHA256SUMS.asc\`: checksums and their signature
+          - Image: \`ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME}\` (linux/amd64, linux/arm64)
+
+          Verify: see [docs/install.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/docs/install.md#verify).
+          NOTES
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
+            --title "claude-usage-exporter $v" --notes-file notes.md release/*

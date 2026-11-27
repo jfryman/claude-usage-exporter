@@ -1,0 +1,9 @@
+.git
+dist
+build
+debian
+.github
+*.egg-info
+__pycache__
+.pytest_cache
+.ruff_cache

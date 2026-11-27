@@ -1,0 +1,15 @@
+# Defaults for claude-usage-exporter, read by both systemd units
+# (claude-usage-exporter.service per user, claude-usage-exporter@<user>.service system-wide).
+# Per-user overrides: ~/.config/claude-usage-exporter/env (user unit) or
+# /etc/claude-usage-exporter/<user>.env (system template unit).
+
+# Address and port to listen on. Use an address your Prometheus can reach.
+#CLAUDE_USAGE_BIND=127.0.0.1
+#CLAUDE_USAGE_PORT=9101
+
+# Query the usage endpoint at most once per this many seconds, whatever the scrape rate.
+#CLAUDE_USAGE_CACHE=300
+
+# The Claude CLI credentials file. Default: $CLAUDE_CONFIG_DIR/.credentials.json,
+# or ~/.claude/.credentials.json of the user the service runs as.
+#CLAUDE_USAGE_CREDENTIALS=

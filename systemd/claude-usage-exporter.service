@@ -1,0 +1,22 @@
+[Unit]
+Description=Prometheus exporter for Claude plan usage limits
+Documentation=man:claude-usage-exporter(1) https://github.com/jfryman/claude-usage-exporter
+After=network-online.target
+
+# Per-user unit: it reads the Claude CLI login in the user's own ~/.claude.
+# Enable it for one user (nothing is enabled when the package is installed):
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now claude-usage-exporter
+#   sudo loginctl enable-linger "$USER"    # keep it running without a login session
+[Service]
+Type=exec
+EnvironmentFile=-/etc/default/claude-usage-exporter
+# Per-user overrides (CLAUDE_USAGE_BIND=..., one per line) win over /etc/default:
+EnvironmentFile=-%h/.config/claude-usage-exporter/env
+ExecStart=/usr/bin/claude-usage-exporter
+Restart=on-failure
+RestartSec=30
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,23 @@
+# Dependabot version updates. Security alerts are separate (repository settings).
+version: 2
+updates:
+  # Workflow actions are pinned by commit SHA with a version comment; Dependabot bumps both.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # The image's base (Dockerfile).
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # pyproject.toml: there are no runtime dependencies; this covers the test/lint floors.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"

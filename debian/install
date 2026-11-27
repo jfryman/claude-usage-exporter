@@ -1,0 +1,3 @@
+systemd/claude-usage-exporter.service usr/lib/systemd/user/
+systemd/claude-usage-exporter@.service usr/lib/systemd/system/
+dashboards/claude-usage-dashboard.json usr/share/claude-usage-exporter/

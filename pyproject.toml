@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claude-usage-exporter"
+version = "0.1.0"
+description = "Prometheus exporter for Claude plan usage limits, read with the Claude CLI's OAuth login"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = []
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: POSIX :: Linux",
+  "Topic :: System :: Monitoring",
+]
+
+[project.urls]
+Homepage = "https://github.com/jfryman/claude-usage-exporter"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+lint = ["ruff>=0.14"]
+
+[project.scripts]
+claude-usage-exporter = "claude_usage_exporter.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "BLE", "S", "SIM"]
+ignore = ["S310"]  # urlopen of a configured URL is the point of the exporter
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S104", "S105", "S106", "S603", "E501"]

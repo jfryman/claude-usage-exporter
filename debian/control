@@ -1,0 +1,32 @@
+Source: claude-usage-exporter
+Section: net
+Priority: optional
+Maintainer: Pip Fryman <phillip@frykinindustries.com>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               dh-sequence-python3,
+               pybuild-plugin-pyproject,
+               python3-all,
+               python3-setuptools,
+               python3-pytest <!nocheck>
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/jfryman/claude-usage-exporter
+Vcs-Browser: https://github.com/jfryman/claude-usage-exporter
+Vcs-Git: https://github.com/jfryman/claude-usage-exporter.git
+
+Package: claude-usage-exporter
+Architecture: all
+Depends: python3 (>= 3.11),
+         ${misc:Depends},
+         ${python3:Depends}
+Description: Prometheus exporter for Claude plan usage limits
+ Serves the usage windows of a Claude subscription (the numbers Claude Code
+ shows under /usage: five-hour and weekly utilization, reset times, per-model
+ weekly limits) as Prometheus metrics. It reads the Claude CLI's existing
+ OAuth login from ~/.claude/.credentials.json and queries the usage endpoint
+ at most once per cache period. Login health (token expiry and refresh
+ times) is exported too; token values never are.
+ .
+ The package ships a per-user systemd unit and a system template unit
+ (claude-usage-exporter@USER.service). Neither is enabled on install.

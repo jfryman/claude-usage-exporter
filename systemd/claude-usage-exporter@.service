@@ -1,0 +1,45 @@
+[Unit]
+Description=Prometheus exporter for Claude plan usage limits (as user %i)
+Documentation=man:claude-usage-exporter(1) https://github.com/jfryman/claude-usage-exporter
+After=network-online.target
+Wants=network-online.target
+
+# System service that runs as an existing user and reads that user's ~/.claude:
+#   sudo systemctl enable --now claude-usage-exporter@alice
+# Use this or the per-user unit for a given user, not both (they'd fight over the port).
+# Per-instance overrides: /etc/claude-usage-exporter/%i.env
+[Service]
+Type=exec
+User=%i
+EnvironmentFile=-/etc/default/claude-usage-exporter
+EnvironmentFile=-/etc/claude-usage-exporter/%i.env
+ExecStart=/usr/bin/claude-usage-exporter
+Restart=on-failure
+RestartSec=30
+
+# The exporter only reads the credentials file and talks HTTPS.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+CapabilityBoundingSet=
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

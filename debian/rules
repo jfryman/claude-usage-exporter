@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME = claude-usage-exporter
+export PYBUILD_TEST_PYTEST = 1
+export PYBUILD_TEST_ARGS = -p no:cacheprovider
+
+%:
+	dh $@ --buildsystem=pybuild
+
+# The units are opt-in: one user (or one template instance) at a time, never every user.
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start
+
+override_dh_installsystemduser:
+	dh_installsystemduser --no-enable
+
+# The license is in /usr/share/doc/claude-usage-exporter/copyright.
+execute_after_dh_auto_install:
+	rm -rf debian/claude-usage-exporter/usr/lib/python3*/dist-packages/*.dist-info/licenses

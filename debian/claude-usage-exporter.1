@@ -1,0 +1,90 @@
+.TH CLAUDE-USAGE-EXPORTER 1 "2026-11-27" "claude-usage-exporter 0.1.0" "User Commands"
+.SH NAME
+claude-usage-exporter \- Prometheus exporter for Claude plan usage limits
+.SH SYNOPSIS
+.B claude-usage-exporter
+.RB [ \-\-bind
+.IR ADDR ]
+.RB [ \-\-port
+.IR PORT ]
+.RB [ \-\-cache\-seconds
+.IR N ]
+.RB [ \-\-credentials
+.IR FILE ]
+.RB [ \-\-once ]
+.RB [ \-\-version ]
+.SH DESCRIPTION
+.B claude-usage-exporter
+reads the Claude CLI's OAuth login and serves the plan's usage windows (the
+numbers Claude Code shows under /usage) as Prometheus metrics on
+.BI http:// ADDR : PORT /metrics\fR.
+The usage endpoint is queried at most once per cache period, whatever the
+scrape rate. The endpoint is undocumented; when its answer can't be read the
+exporter reports
+.B claude_usage_up 0
+and keeps serving the login health metrics.
+.PP
+Only timestamps are read from the credentials file and exported. Token values
+are never exported or logged. The exporter never refreshes the token itself:
+the Claude CLI does that when it runs.
+.SH OPTIONS
+Every option can also be set with an environment variable; the option wins.
+.TP
+.BI \-\-bind " ADDR"
+Address to listen on. Environment: CLAUDE_USAGE_BIND. Default: 127.0.0.1.
+.TP
+.BI \-\-port " PORT"
+Port to listen on. Environment: CLAUDE_USAGE_PORT. Default: 9101.
+.TP
+.BI \-\-cache\-seconds " N"
+Query the usage endpoint at most every N seconds. Environment:
+CLAUDE_USAGE_CACHE. Default: 300.
+.TP
+.BI \-\-credentials " FILE"
+The Claude CLI credentials file. Environment: CLAUDE_USAGE_CREDENTIALS.
+Default: $CLAUDE_CONFIG_DIR/.credentials.json, or ~/.claude/.credentials.json.
+.TP
+.BI \-\-url " URL"
+Usage endpoint, for testing against a mock server. Environment: CLAUDE_USAGE_URL.
+.TP
+.B \-\-once
+Print the metrics once to standard output and exit.
+.TP
+.B \-\-version
+Print the version and exit.
+.SH FILES
+.TP
+.I /etc/default/claude-usage-exporter
+Environment defaults for both systemd units.
+.TP
+.I ~/.config/claude-usage-exporter/env
+Per-user overrides for the user unit.
+.TP
+.I /etc/claude-usage-exporter/USER.env
+Per-instance overrides for claude-usage-exporter@USER.service.
+.TP
+.I /usr/share/claude-usage-exporter/claude-usage-dashboard.json
+Grafana dashboard for these metrics.
+.SH SYSTEMD
+Nothing is enabled when the package is installed. For one user:
+.PP
+.nf
+.RS
+systemctl \-\-user daemon\-reload
+systemctl \-\-user enable \-\-now claude\-usage\-exporter
+sudo loginctl enable\-linger $USER
+.RE
+.fi
+.PP
+Or as a system service running as that user:
+.PP
+.nf
+.RS
+sudo systemctl enable \-\-now claude\-usage\-exporter@alice
+.RE
+.fi
+.SH SEE ALSO
+.BR systemctl (1),
+.BR loginctl (1)
+.PP
+https://github.com/jfryman/claude-usage-exporter
