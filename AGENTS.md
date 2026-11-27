@@ -2,6 +2,9 @@
 
 Notes for anyone (human or agent) changing this repository.
 
+- **Project memory is in [lode/](lode/lode-map.md).** Read `lode/summary.md` first, and update the
+  lode in the same PR as the change it describes.
+
 - **Public repository.** No hostnames, IP addresses, internal service names, or anything about a
   particular deployment in code, tests, fixtures, commits or PRs. Fixtures are anonymized.
 - **Metric names and labels are the interface.** Renaming or removing one is a breaking change:
